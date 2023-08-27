@@ -8,8 +8,7 @@
 	export let minPolarAngle = 0; // radians
 	export let maxPolarAngle = Math.PI; // radians
 	export let pointerSpeed = 1.0;
-
-	let isLocked = false;
+	export let panning: Boolean;
 
 	const { renderer, invalidate } = useThrelte();
 
@@ -51,30 +50,38 @@
 	});
 
 	function onMouseMove(event: MouseEvent) {
-		if (!isLocked) return;
-		if (!$camera) return;
+		if (!panning || !$camera) return;
 
-		const { movementX, movementY } = event;
+		if (event.buttons === 0) {
+			domElement.style.cursor = 'grab';
+			return;
+		}
 
-		_euler.setFromQuaternion($camera.quaternion);
+		if (event.buttons === 1) {
+			domElement.style.cursor = 'grabbing';
 
-		_euler.y -= movementX * 0.002 * pointerSpeed;
-		_euler.x -= movementY * 0.002 * pointerSpeed;
+			const { movementX, movementY } = event;
 
-		_euler.x = Math.max(_PI_2 - maxPolarAngle, Math.min(_PI_2 - minPolarAngle, _euler.x));
+			_euler.setFromQuaternion($camera.quaternion);
 
-		$camera.quaternion.setFromEuler(_euler);
+			_euler.y -= movementX * 0.002 * pointerSpeed;
+			_euler.x -= movementY * 0.002 * pointerSpeed;
 
-		onChange();
+			_euler.x = Math.max(_PI_2 - maxPolarAngle, Math.min(_PI_2 - minPolarAngle, _euler.x));
+
+			$camera.quaternion.setFromEuler(_euler);
+
+			onChange();
+		}
 	}
 
 	function onPointerlockChange() {
 		if (document.pointerLockElement === domElement) {
 			dispatch('lock');
-			isLocked = true;
+			panning = true;
 		} else {
 			dispatch('unlock');
-			isLocked = false;
+			panning = false;
 		}
 	}
 
