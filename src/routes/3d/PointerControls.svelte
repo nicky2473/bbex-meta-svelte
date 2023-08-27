@@ -8,6 +8,7 @@
 	export let minPolarAngle = 0; // radians
 	export let maxPolarAngle = Math.PI; // radians
 	export let pointerSpeed = 1.0;
+	export let panning: Boolean;
 
 	const { renderer, invalidate } = useThrelte();
 
@@ -35,26 +36,56 @@
 		dispatch('change');
 	};
 
+	export const lock = () => domElement.requestPointerLock();
+	export const unlock = () => document.exitPointerLock();
+
 	domElement.addEventListener('mousemove', onMouseMove);
+	domElement.ownerDocument.addEventListener('pointerlockchange', onPointerlockChange);
+	domElement.ownerDocument.addEventListener('pointerlockerror', onPointerlockError);
 
 	onDestroy(() => {
 		domElement.removeEventListener('mousemove', onMouseMove);
+		domElement.ownerDocument.removeEventListener('pointerlockchange', onPointerlockChange);
+		domElement.ownerDocument.removeEventListener('pointerlockerror', onPointerlockError);
 	});
 
 	function onMouseMove(event: MouseEvent) {
-		if (!$camera) return;
+		if (!panning || !$camera) return;
 
-		const { movementX, movementY } = event;
+		if (event.buttons === 0) {
+			domElement.style.cursor = 'grab';
+			return;
+		}
 
-		_euler.setFromQuaternion($camera.quaternion);
+		if (event.buttons === 1) {
+			domElement.style.cursor = 'grabbing';
 
-		_euler.y -= movementX * 0.002 * pointerSpeed;
-		_euler.x -= movementY * 0.002 * pointerSpeed;
+			const { movementX, movementY } = event;
 
-		_euler.x = Math.max(_PI_2 - maxPolarAngle, Math.min(_PI_2 - minPolarAngle, _euler.x));
+			_euler.setFromQuaternion($camera.quaternion);
 
-		$camera.quaternion.setFromEuler(_euler);
+			_euler.y -= movementX * 0.002 * pointerSpeed;
+			_euler.x -= movementY * 0.002 * pointerSpeed;
 
-		onChange();
+			_euler.x = Math.max(_PI_2 - maxPolarAngle, Math.min(_PI_2 - minPolarAngle, _euler.x));
+
+			$camera.quaternion.setFromEuler(_euler);
+
+			onChange();
+		}
+	}
+
+	function onPointerlockChange() {
+		if (document.pointerLockElement === domElement) {
+			dispatch('lock');
+			panning = true;
+		} else {
+			dispatch('unlock');
+			panning = false;
+		}
+	}
+
+	function onPointerlockError() {
+		console.error('PointerLockControls: Unable to use Pointer Lock API');
 	}
 </script>
