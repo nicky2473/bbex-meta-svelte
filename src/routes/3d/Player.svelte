@@ -1,18 +1,16 @@
 <script lang="ts">
 	import type { RigidBody as RapierRigidBody } from '@dimforge/rapier3d-compat';
-	import { T, useFrame, useThrelte } from '@threlte/core';
+	import { T, useFrame } from '@threlte/core';
 	import { RigidBody, CollisionGroups, Collider } from '@threlte/rapier';
-	import { onDestroy } from 'svelte';
 	import { PerspectiveCamera, Vector3 } from 'three';
-	import PointerLockControls from './PointerLockControls.svelte';
+	import PointerControls from './PointerControls.svelte';
 
 	export let position: [x: number, y: number, z: number] = [0, 0, 0];
 	let radius = 0.3;
 	let height = 1.7;
-	export let speed = 6;
+	export let speed = 3;
 
 	let rigidBody: RapierRigidBody;
-	let lock: () => void;
 	let cam: PerspectiveCamera;
 
 	let forward = 0;
@@ -21,16 +19,6 @@
 	let right = 0;
 
 	const t = new Vector3();
-
-	const lockControls = () => lock();
-
-	const { renderer } = useThrelte();
-
-	renderer.domElement.addEventListener('click', lockControls);
-
-	onDestroy(() => {
-		renderer.domElement.removeEventListener('click', lockControls);
-	});
 
 	useFrame(() => {
 		if (!rigidBody) return;
@@ -102,7 +90,7 @@
 			ref.lookAt(new Vector3(0, 2, 0));
 		}}
 	>
-		<PointerLockControls bind:lock />
+		<PointerControls />
 	</T.PerspectiveCamera>
 </T.Group>
 

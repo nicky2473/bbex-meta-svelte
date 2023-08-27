@@ -9,8 +9,6 @@
 	export let maxPolarAngle = Math.PI; // radians
 	export let pointerSpeed = 1.0;
 
-	let isLocked = false;
-
 	const { renderer, invalidate } = useThrelte();
 
 	const domElement = renderer.domElement;
@@ -37,21 +35,13 @@
 		dispatch('change');
 	};
 
-	export const lock = () => domElement.requestPointerLock();
-	export const unlock = () => document.exitPointerLock();
-
 	domElement.addEventListener('mousemove', onMouseMove);
-	domElement.ownerDocument.addEventListener('pointerlockchange', onPointerlockChange);
-	domElement.ownerDocument.addEventListener('pointerlockerror', onPointerlockError);
 
 	onDestroy(() => {
 		domElement.removeEventListener('mousemove', onMouseMove);
-		domElement.ownerDocument.removeEventListener('pointerlockchange', onPointerlockChange);
-		domElement.ownerDocument.removeEventListener('pointerlockerror', onPointerlockError);
 	});
 
 	function onMouseMove(event: MouseEvent) {
-		if (!isLocked) return;
 		if (!$camera) return;
 
 		const { movementX, movementY } = event;
@@ -66,19 +56,5 @@
 		$camera.quaternion.setFromEuler(_euler);
 
 		onChange();
-	}
-
-	function onPointerlockChange() {
-		if (document.pointerLockElement === domElement) {
-			dispatch('lock');
-			isLocked = true;
-		} else {
-			dispatch('unlock');
-			isLocked = false;
-		}
-	}
-
-	function onPointerlockError() {
-		console.error('PointerLockControls: Unable to use Pointer Lock API');
 	}
 </script>
