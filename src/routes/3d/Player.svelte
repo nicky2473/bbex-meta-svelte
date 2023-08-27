@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { RigidBody as RapierRigidBody } from '@dimforge/rapier3d-compat';
-	import { T, useFrame } from '@threlte/core';
+	import { T, useFrame, useThrelte } from '@threlte/core';
 	import { RigidBody, CollisionGroups, Collider } from '@threlte/rapier';
 	import { PerspectiveCamera, Vector3 } from 'three';
 	import PointerControls from './PointerControls.svelte';
@@ -17,8 +17,11 @@
 	let backward = 0;
 	let left = 0;
 	let right = 0;
+	let panning = false;
 
 	const t = new Vector3();
+
+	const { renderer } = useThrelte();
 
 	useFrame(() => {
 		if (!rigidBody) return;
@@ -38,17 +41,20 @@
 	});
 
 	function onKeyDown(e: KeyboardEvent) {
-		switch (e.key) {
-			case 's':
+		switch (e.code) {
+			case 'Space':
+				panning = true;
+				break;
+			case 'KeyS':
 				backward = 1;
 				break;
-			case 'w':
+			case 'KeyW':
 				forward = 1;
 				break;
-			case 'a':
+			case 'KeyA':
 				left = 1;
 				break;
-			case 'd':
+			case 'KeyD':
 				right = 1;
 				break;
 			default:
@@ -57,17 +63,21 @@
 	}
 
 	function onKeyUp(e: KeyboardEvent) {
-		switch (e.key) {
-			case 's':
+		switch (e.code) {
+			case 'Space':
+				panning = false;
+				renderer.domElement.style.cursor = 'default';
+				break;
+			case 'KeyS':
 				backward = 0;
 				break;
-			case 'w':
+			case 'KeyW':
 				forward = 0;
 				break;
-			case 'a':
+			case 'KeyA':
 				left = 0;
 				break;
-			case 'd':
+			case 'KeyD':
 				right = 0;
 				break;
 			default:
@@ -90,7 +100,7 @@
 			ref.lookAt(new Vector3(0, 2, 0));
 		}}
 	>
-		<PointerControls />
+		<PointerControls {panning} />
 	</T.PerspectiveCamera>
 </T.Group>
 
