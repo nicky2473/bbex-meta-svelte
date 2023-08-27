@@ -7,11 +7,21 @@
 	import Player from './Player.svelte';
 	import Ground from './Ground.svelte';
 
+	type ViewType = 'top' | 'player';
+
 	let playerMesh: Mesh;
 	let positionHasBeenSet = false;
+	let viewType: ViewType = 'player';
+
 	const smoothPlayerPosX = spring(0);
 	const smoothPlayerPosZ = spring(0);
 	const t3 = new Vector3();
+
+	function onKeyDown(e: KeyboardEvent) {
+		if (e.code === 'ShiftLeft') {
+			viewType = viewType === 'top' ? 'player' : 'top';
+		}
+	}
 
 	useFrame(() => {
 		if (!playerMesh) return;
@@ -26,6 +36,8 @@
 	});
 </script>
 
+<svelte:window on:keydown|preventDefault={onKeyDown} />
+
 <T.AmbientLight />
 <T.DirectionalLight />
 
@@ -33,8 +45,14 @@
 	<Ground />
 </CollisionGroups>
 
-<CollisionGroups groups={[0]}>
-	<Player bind:playerMesh position={[0, 2, 3]} />
-</CollisionGroups>
+{#if viewType === 'top'}
+	<T.PerspectiveCamera makeDefault position={[0, 15, 0]}>
+		<OrbitControls enableDamping />
+	</T.PerspectiveCamera>
+{:else}
+	<CollisionGroups groups={[0]}>
+		<Player bind:playerMesh position={[0, 2, 3]} />
+	</CollisionGroups>
+{/if}
 
 <GLTF url="/roomA/scene.gltf" position={[0, 0.5, 0]} castShadow receiveShadow />
